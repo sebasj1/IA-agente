@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Chatbot Universitario</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        h1, h3 {
+            text-align: center;
+            color: #333;
+        }
+
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        input[type="text"], select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        button {
+            background-color: #0057b8;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #004a9e;
+        }
+
+        .respuesta {
+            margin-top: 20px;
+            background-color: #e7f1ff;
+            padding: 15px;
+            border-left: 4px solid #0057b8;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Asistente de Exámenes y Correlatividades</h1>
+        <h3>Licenciatura en Sistemas de Información - Plan 2009</h3>
+        <form id="formulario">
+            <label for="lu">Escribí tu libreta universitaria para evaluar si puedes rendirla:</label>
+            <input type="text" name="lu" id="lu" placeholder="Ej: 44444 (no obligatorio)">
+
+            <label for="materia">Selecciona la materia:</label>
+            <select name="materia" id="materia" required>
+                <option value="Algoritmos y Estructuras de Datos I">Algoritmos y Estructuras de Datos I</option>
+                <option value="Álgebra">Álgebra</option>
+                <option value="Algoritmos y Estructuras de Datos II">Algoritmos y Estructuras de Datos II</option>
+                <option value="Lógica y Matemática Computacional">Lógica y Matemática Computacional</option>
+                <option value="Sistemas y Organizaciones">Sistemas y Organizaciones</option>
+                <option value="Paradigmas y Lenguajes">Paradigmas y Lenguajes</option>
+                <option value="Arquitectura y Organización de Computadoras">Arquitectura y Organización de Computadoras</option>
+                <option value="Cálculo Diferencial e Integral">Cálculo Diferencial e Integral</option>
+                <option value="Programación Orientada a Objetos">Programación Orientada a Objetos</option>
+                <option value="Sistemas Operativos">Sistemas Operativos</option>
+                <option value="Administración y Gestión de Organizaciones">Administración y Gestión de Organizaciones</option>
+                <option value="Taller de Programación I">Taller de Programación I</option>
+                <option value="Comunicaciones de Datos">Comunicaciones de Datos</option>
+                <option value="Ingeniería de Software I">Ingeniería de Software I</option>
+                <option value="Taller de Programación II">Taller de Programación II</option>
+                <option value="Probabilidad y Estadística">Probabilidad y Estadística</option>
+                <option value="Bases de Datos I">Bases de Datos I</option>
+                <option value="Inglés Técnico Informático (extracurricular)">Inglés Técnico Informático (extracurricular)</option>
+            </select>
+
+            <button type="submit">Enviar</button>
+        </form>
+
+        <div id="respuesta" class="respuesta" style="display:none;">
+            <h3>Respuesta:</h3>
+            <p id="respuestaTexto"></p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById("formulario").addEventListener("submit", function(event) {
+            event.preventDefault();
+
+            const lu = document.getElementById("lu").value;
+            const materia = document.getElementById("materia").value;
+
+            const url = `api?pregunta=${encodeURIComponent(materia)}&lu=${encodeURIComponent(lu)}`;
+
+            fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Muestra la respuesta obtenida del servidor
+                document.getElementById("respuesta").style.display = "block";
+                document.getElementById("respuestaTexto").textContent = data.respuesta || "No se encontró información.";
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                document.getElementById("respuesta").style.display = "block";
+                document.getElementById("respuestaTexto").textContent = "Hubo un error al obtener la información.";
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,11 +1,11 @@
 # app.py
 
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, Response
 
 import csv
 import unicodedata
 import re
-
+import json
 
 #segundo arbol de decision para correlativas
 def buscar_fechas_registrado(materia_buscada,materias_alumno): 
@@ -101,20 +101,27 @@ def buscar_fechas(materia_buscada,lu):
 
 app = Flask(__name__)
 
-@app.route("/", methods=["GET", "POST"])
+@app.route("/api", methods=["GET", "POST"])
 
 def index():
     respuesta = ""
-    if request.method == "POST":
-        materia_buscada = request.form["pregunta"]
-        lu = request.form["lu"]
+    if request.method == "GET":
+        materia_buscada = request.args.get("pregunta")
+        lu = request.args.get("lu")
         #limpio las palabras
         materia_buscada = quitar_acentos(materia_buscada.strip().lower())
         lu= lu.strip().lower()
         respuesta =buscar_fechas(materia_buscada,lu)
        
-      
-    return render_template("index.html", respuesta=respuesta)
+    data_json = json.dumps({"respuesta": respuesta}, ensure_ascii=False)
+    return Response(data_json, content_type="application/json; charset=utf-8")
+    # return render_template("index.html", respuesta=respuesta)
+
+@app.route("/chat", methods=["GET"])
+def chat():
+    # Solo devuelve el HTML para la interfaz de chat
+    return render_template("chat.html")
+
 
 
 if __name__ == "__main__":
