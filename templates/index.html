@@ -22,7 +22,7 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
-        h1 {
+        h1,h3 {
             text-align: center;
             color: #333;
         }
@@ -69,13 +69,17 @@
 <body>
     <div class="container">
         <h1>Asistente de Exámenes y Correlatividades</h1>
-        <form method="POST">
-            <label for="pregunta">Escribí tu pregunta:</label>
-            <input type="text" name="pregunta" id="pregunta" required placeholder="Ej: ¿Cuándo es el final de Álgebra?">
+        <h3> Licenciatura en Sistemas de Información - Plan 20..</h3>
+        <form method="POST">  
+            <label for="lu">Escribí tu libreta universitaria:</label>
+            <input type="text" name="lu" id="lu" required placeholder="Ej: 44444">
+         
+            <label for="pregunta">Escribí la materia:</label>
+            <input type="text" name="pregunta" id="pregunta" required placeholder="Ej: Álgebra">
             <button type="submit">Enviar</button>
         </form>
 
-        {% if respuesta %}
+        {% if respuesta  %}
             <div class="respuesta">
                 <h3>Respuesta:</h3>
                 <p>{{ respuesta }}</p>
