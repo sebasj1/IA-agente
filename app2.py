@@ -6,52 +6,65 @@ import csv
 import unicodedata
 import re
 
- 
 
+#segundo arbol de decision para correlativas
+def buscar_fechas_registrado(materia_buscada,materias_alumno): 
+    respuesta = ''
+    with open('./documents/programa.csv') as file:
+        csv_reader = csv.reader(file, delimiter=',')
+        next(csv_reader, None)  #Saltamos la cabecera
+        for row in csv_reader:
+            #Materia en la segunda columna
+            materia = quitar_acentos(row[1].strip().lower())
+            #Buscamos si la materia aparece como una palabra completa en el texto
+            if re.search(materia_buscada,materia ) or re.search(materia,materia_buscada) and materia!="":
+                respuesta += f"Las fechas de {row[1]} son : {row[6] } "
+                if  set(row[5].split(',')).issubset(set(materias_alumno))  or row[5]=='':
+                    respuesta+="Estás en condiciones para rendir "
+                else:
+                    #Separa las materias faltantes para rendir
+                    cod_materias_faltantes=list(set(row[5].split(','))-set(materias_alumno))
+                    materias_faltantes=buscar_materias(cod_materias_faltantes)
+                    respuesta+=f"NO estás en condiciones para rendir, te faltan las siguientes materias {materias_faltantes}"
+        return respuesta  
+     
+#buscar las materias que faltan para aprobar
 def buscar_materias(lista_materias):
     listado=""
     with open('./documents/programa.csv') as file:
         csv_reader = csv.reader(file, delimiter=',')
         next(csv_reader, None)  # Saltamos la cabecera
         for row in csv_reader:
-            if len(row) > 1: 
-                if row[0] in lista_materias:
-                    listado+=f"{row[1]}, "
+            if row[0] in lista_materias:
+                listado+=f"{row[1]}, "
     return listado
 
-def evaluar_materia(pregunta,materias_alumno): 
-    flag = ''
-    pregunta = pregunta.strip().lower()
-    
+def buscar_fechas_no_registrado(materia_buscada): 
+    respuesta = ''
     with open('./documents/programa.csv') as file:
         csv_reader = csv.reader(file, delimiter=',')
         next(csv_reader, None)  # Saltamos la cabecera
         for row in csv_reader:
-            if len(row) > 1:  # Asegurarse de que la fila tiene al menos dos columnas
-                materia = quitar_acentos(row[1].strip().lower())  # Materia en la segunda columna
-                # Buscamos si la materia aparece como una palabra completa en el texto
-                if re.search(pregunta,materia ) or re.search(materia,pregunta) and materia!="":
-                    flag += f"Las fechas de {row[1]} son : {row[6] } "
-                    if  set(row[5].split(',')).issubset(set(materias_alumno))  or row[5]=='':
-                        flag+="Estás en condiciones para rendir "
-                    else:
-                        cod_materias_faltantes=list(set(row[5].split(','))-set(materias_alumno))
-                        materias_faltantes=buscar_materias(cod_materias_faltantes)
-                        flag+=f"NO estás en condiciones para rendir, te falta/n las siguientes materias {materias_faltantes}"
-        return flag  
+            # Materia en la segunda columna
+            materia = quitar_acentos(row[1].strip().lower())  
+            # Buscamos si la materia aparece como una palabra completa en el texto
+            if re.search(materia_buscada,materia ) or re.search(materia,materia_buscada) and materia!="":
+                respuesta += f"Las fechas de {row[1]} son : {row[6] } "
+        return respuesta  
            
-def evaluar_alumno(lu):
-    flag=''
+#esta registrado o no,si Si devuelve materias,si NO devuelve vacio
+def buscar_alumno(lu):
+    respuesta=''   
     with open('./documents/alumnos.csv') as file:
         csv_reader = csv.reader(file, delimiter=',')
-       
         for row in csv_reader: 
-            if len(row) > 1:  # Asegurarse de que la fila tiene al menos dos columnas
-                alumno = row[0].strip().lower()  # Asumiendo que las materias están en la segunda columna
-                if alumno == lu.strip().lower():
-                    flag = row[2].split(',')#devuelve todas sus materias aprobadas
-                      
-    return flag
+            # Asumiendo que las l.u están en la 1ra columna
+            alumno = row[0].strip().lower()
+           #Valido que este registrado
+            if alumno == lu:
+                #devuelve todas sus materias aprobadas
+                respuesta = row[2].split(',')
+    return respuesta
 
 def quitar_acentos(texto):
     return ''.join(
@@ -61,12 +74,25 @@ def quitar_acentos(texto):
         # Filtra los caracteres que son marcas de acento (como el acento agudo o la tilde) y los elimina.
     )
 
-def buscar_fechas(pregunta,lu):
-    #Considerando que es alumno y essa materia existe,evaluar correlativas
-    respuesta="No se encontró al estudiante"
-    materias_alumno=evaluar_alumno(lu)
-    if materias_alumno: #si hay es porque está registrado
-        fechas=evaluar_materia(pregunta,materias_alumno)
+#este sería el arbol de decision principal
+def buscar_fechas(materia_buscada,lu):
+    respuesta=""
+    if lu!="": #que tenga LU
+        materias_alumno=buscar_alumno(lu) #busca al alumno y materias
+        if materias_alumno: #si hay es porque está registrado
+            fechas=buscar_fechas_registrado(materia_buscada,materias_alumno)
+            if fechas: #busca coincidencias de materia
+                respuesta=fechas
+            else:
+                respuesta="No se encontro la materia, brinda más especificación"
+        else:
+            fechas=buscar_fechas_no_registrado(materia_buscada)
+            if fechas:
+                respuesta=fechas + "puedes brindar tu Libreta universitaria para más información"
+            else:
+                respuesta="No se encontro la materia, brinda más especificación"
+    else:
+        fechas=buscar_fechas_no_registrado(materia_buscada)
         if fechas:
             respuesta=fechas
         else:
@@ -76,13 +102,16 @@ def buscar_fechas(pregunta,lu):
 app = Flask(__name__)
 
 @app.route("/", methods=["GET", "POST"])
+
 def index():
     respuesta = ""
     if request.method == "POST":
-        pregunta = request.form["pregunta"]
+        materia_buscada = request.form["pregunta"]
         lu = request.form["lu"]
-        pregunta=quitar_acentos(pregunta)#quito los acentos
-        respuesta =buscar_fechas(pregunta,lu)
+        #limpio las palabras
+        materia_buscada = quitar_acentos(materia_buscada.strip().lower())
+        lu= lu.strip().lower()
+        respuesta =buscar_fechas(materia_buscada,lu)
        
       
     return render_template("index.html", respuesta=respuesta)
