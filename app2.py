@@ -7,6 +7,7 @@ import unicodedata
 import re
 import json
 
+# Devuelve las fechas de examen y verifica correlativas del alumno
 #segundo arbol de decision para correlativas
 def buscar_fechas_registrado(materia_buscada,materias_alumno): 
     respuesta = ''
@@ -39,6 +40,7 @@ def buscar_materias(lista_materias):
                 listado+=f"{row[1]}, "
     return listado
 
+#Devuelve las fechas de examen sin validar correlativas (no hay LU)
 def buscar_fechas_no_registrado(materia_buscada): 
     respuesta = ''
     with open('./documents/programa.csv') as file:
@@ -60,7 +62,7 @@ def buscar_alumno(lu):
         for row in csv_reader: 
             # Asumiendo que las l.u están en la 1ra columna
             alumno = row[0].strip().lower()
-           #Valido que este registrado
+            #Valido que este registrado
             if alumno == lu:
                 #devuelve todas sus materias aprobadas
                 respuesta = row[2].split(',')
@@ -99,7 +101,7 @@ def buscar_fechas(materia_buscada,lu):
             respuesta="No se encontro la materia, brinda más especificación"
     return respuesta
 
-app = Flask(__name__)
+app = Flask(__name__)   
 
 @app.route("/api", methods=["GET", "POST"])
 
